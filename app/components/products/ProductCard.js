@@ -1,8 +1,26 @@
-// JavaScript source code
+// app/components/products/ProductCard.js
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
+import { useCart } from '../../context/CartContext';
+import { useState } from 'react';
 
 export default function ProductCard({ product }) {
+    const { addToCart } = useCart();
+    const [isAdding, setIsAdding] = useState(false);
+
+    const handleAddToCart = (e) => {
+        e.preventDefault(); // Prevent navigation if clicked on a link
+        setIsAdding(true);
+        addToCart(product);
+
+        // Show feedback animation
+        setTimeout(() => {
+            setIsAdding(false);
+        }, 1000);
+    };
+
     return (
         <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
             {/* Product Image */}
@@ -89,8 +107,15 @@ export default function ProductCard({ product }) {
                         )}
                     </div>
 
-                    <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold">
-                        Add to Cart
+                    <button
+                        onClick={handleAddToCart}
+                        disabled={isAdding}
+                        className={`px-4 py-2 rounded-lg transition-all text-sm font-semibold ${isAdding
+                                ? 'bg-green-500 text-white'
+                                : 'bg-blue-600 text-white hover:bg-blue-700'
+                            }`}
+                    >
+                        {isAdding ? '? Added' : 'Add to Cart'}
                     </button>
                 </div>
             </div>

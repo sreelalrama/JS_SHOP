@@ -1,12 +1,10 @@
+// app/layout.js
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-//import Header from "@/components/home/Header";
-//import Navbar from "@/components/home/Navbar";
-//import Footer from "@/components/home/Footer";
-
 import Header from "./components/home/Header";
 import Navbar from "./components/home/Navbar";
 import Footer from "./components/home/Footer";
+import { CartProvider } from "./context/CartContext";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -29,15 +27,17 @@ export default function RootLayout({ children }) {
             <body
                 className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
             >
-                <Header />
-                <Navbar />
+                <CartProvider>
+                    <Header />
+                    <Navbar />
 
-                {/* Main content with top padding to account for fixed header + navbar */}
-                <main className="flex-1 pt-[124px]">
-                    {children}
-                </main>
+                    {/* Main content with top padding to account for fixed header + navbar */}
+                    <main className="flex-1 pt-[124px]">
+                        {children}
+                    </main>
 
-                <Footer />
+                    <Footer />
+                </CartProvider>
             </body>
         </html>
     );
