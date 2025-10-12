@@ -1,12 +1,13 @@
 import ProductDetails from '../../components/Products/ProductDetails';
 import ProductCard from '../../components/Products/ProductCard';
 import { notFound } from 'next/navigation';
-import { products } from '../../data/products';
+//import { products } from '../../data/products';
+import { productService } from '../../services/productService';
 
-export default function ProductDetailPage({ params }) {
+export default async function ProductDetailPage({ params }) {
     // Find the product by ID
     console.log("#params.id:" + params.id);
-    const product = products.find(p => p.id === parseInt(params.id));
+    const product = await productService.getProductById(params.id);
 
     // If product not found, show 404
     if (!product) {
@@ -14,9 +15,8 @@ export default function ProductDetailPage({ params }) {
     }
 
     // Get related products (same category, excluding current product)
-    const relatedProducts = products
-        .filter(p => p.category === product.category && p.id !== product.id)
-        .slice(0, 4);
+    let relatedProducts = await productService.getProductsByCategory(product.category);
+    relatedProducts = relatedProducts.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
 
     return (
         <div className="container mx-auto px-4 py-8">

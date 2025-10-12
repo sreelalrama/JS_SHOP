@@ -1,8 +1,11 @@
 // JavaScript source code
 import ProductList from '../components/Products/ProductList';
-import { products } from '../data/products';
+//import { products } from '../data/products';
+import { productService } from '../services/productService';
 
-export default function ProductsPage() {
+export default async function ProductsPage() {
+    const products = await productService.getAllProducts();
+
     return (
         <div className="container mx-auto px-4 py-8">
             {/* Page Header */}
