@@ -172,6 +172,25 @@ export default function RegisterPage() {
                                         onChange={handleChange}
                                         className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${errors.firstName ? 'border-red-500' : 'border-gray-300'
                                             }`}
+                                        placeholder="John"
+                                    />
+                                    {errors.firstName && (
+                                        <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label htmlFor="lastName" className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Last Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="lastName"
+                                        name="lastName"
+                                        value={formData.lastName}
+                                        onChange={handleChange}
+                                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${errors.lastName ? 'border-red-500' : 'border-gray-300'
+                                            }`}
                                         placeholder="Doe"
                                     />
                                     {errors.lastName && (
@@ -255,8 +274,8 @@ export default function RegisterPage() {
                                         <div className="flex items-center justify-between mb-1">
                                             <span className="text-xs text-gray-600">Password strength:</span>
                                             <span className={`text-xs font-semibold ${passwordStrength <= 25 ? 'text-red-500' :
-                                                    passwordStrength <= 50 ? 'text-orange-500' :
-                                                        passwordStrength <= 75 ? 'text-yellow-500' : 'text-green-500'
+                                                passwordStrength <= 50 ? 'text-orange-500' :
+                                                    passwordStrength <= 75 ? 'text-yellow-500' : 'text-green-500'
                                                 }`}>
                                                 {getPasswordStrengthText()}
                                             </span>
@@ -359,8 +378,8 @@ export default function RegisterPage() {
                                 type="submit"
                                 disabled={isLoading}
                                 className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-all transform ${isLoading
-                                        ? 'bg-gray-400 cursor-not-allowed'
-                                        : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 hover:shadow-lg hover:-translate-y-0.5'
+                                    ? 'bg-gray-400 cursor-not-allowed'
+                                    : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 hover:shadow-lg hover:-translate-y-0.5'
                                     }`}
                             >
                                 {isLoading ? (
@@ -426,7 +445,7 @@ export default function RegisterPage() {
                 <div className="absolute inset-0 bg-black opacity-20"></div>
                 <div className="relative z-10 text-white max-w-md">
                     <div className="mb-8">
-                        <div className="text-5xl font-bold mb-4">?</div>
+                        <div className="text-5xl font-bold mb-4">??</div>
                         <h1 className="text-4xl font-bold mb-4">Start Your Shopping Journey</h1>
                         <p className="text-xl text-blue-100">
                             Join thousands of happy customers
@@ -467,25 +486,4 @@ export default function RegisterPage() {
             </div>
         </div>
     );
-}="John"
-    />
-{
-    errors.firstName && (
-        <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>
-    )
 }
-                                </div >
-
-    <div>
-        <label htmlFor="lastName" className="block text-sm font-semibold text-gray-700 mb-2">
-            Last Name
-        </label>
-        <input
-            type="text"
-            id="lastName"
-            name="lastName"
-            value={formData.lastName}
-            onChange={handleChange}
-            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${errors.lastName ? 'border-red-500' : 'border-gray-300'
-                }`}
-            placeholder
