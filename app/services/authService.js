@@ -1,16 +1,58 @@
-// JavaScript source code
 // app/services/authService.js
+import { users as initialUsers } from '../data/users';
 
 /**
  * Authentication Service
- * This service abstracts authentication logic.
- * Replace the placeholder implementation with actual API calls when backend is ready.
+ * This service handles user authentication using the dummy user data.
+ * It stores users in memory during SSR and in localStorage on the client.
  */
+
+// Helper to check if we're in the browser
+const isBrowser = typeof window !== 'undefined';
 
 class AuthService {
     constructor() {
         this.storageKey = 'auth_user';
         this.tokenKey = 'auth_token';
+        this.usersKey = 'app_users';
+
+        // Initialize users in localStorage if on client side
+        if (isBrowser) {
+            this.initializeUsers();
+        }
+    }
+
+    /**
+     * Initialize users in localStorage with dummy data if empty
+     */
+    initializeUsers() {
+        if (!isBrowser) return;
+
+        const existingUsers = localStorage.getItem(this.usersKey);
+        if (!existingUsers) {
+            localStorage.setItem(this.usersKey, JSON.stringify(initialUsers));
+        }
+    }
+
+    /**
+     * Get all stored users from localStorage
+     * @returns {Array} Array of users
+     */
+    getStoredUsers() {
+        if (!isBrowser) return [];
+
+        const usersStr = localStorage.getItem(this.usersKey);
+        return usersStr ? JSON.parse(usersStr) : [];
+    }
+
+    /**
+     * Save users to localStorage
+     * @param {Array} users - Array of users to save
+     */
+    saveUsers(users) {
+        if (!isBrowser) return;
+
+        localStorage.setItem(this.usersKey, JSON.stringify(users));
     }
 
     /**
@@ -43,15 +85,32 @@ class AuthService {
             email: userData.email,
             firstName: userData.firstName,
             lastName: userData.lastName,
+            phone: userData.phone || '',
+            address: {
+                street: '',
+                apartment: '',
+                city: '',
+                state: '',
+                zipCode: '',
+                country: 'United States'
+            },
             createdAt: new Date().toISOString(),
+            lastLogin: new Date().toISOString(),
+            isActive: true,
+            avatar: null,
+            preferences: {
+                newsletter: userData.newsletter || false,
+                notifications: true,
+                theme: 'light'
+            }
         };
 
-        // Store user (in real implementation, this would be done by backend)
+        // Store user with password
         existingUsers.push({
             ...newUser,
             password: userData.password // In real app, password would be hashed on backend
         });
-        localStorage.setItem('users', JSON.stringify(existingUsers));
+        this.saveUsers(existingUsers);
 
         // Generate token (placeholder)
         const token = this.generateToken(newUser);
@@ -60,13 +119,6 @@ class AuthService {
         this.setAuthData(newUser, token);
 
         return { user: newUser, token };
-
-        // API version would be:
-        // return fetch('/api/auth/register', {
-        //     method: 'POST',
-        //     headers: { 'Content-Type': 'application/json' },
-        //     body: JSON.stringify(userData)
-        // }).then(res => res.json())
     }
 
     /**
@@ -87,6 +139,15 @@ class AuthService {
             throw new Error('Invalid email or password');
         }
 
+        // Check if user is active
+        if (!user.isActive) {
+            throw new Error('Account is inactive. Please contact support.');
+        }
+
+        // Update last login
+        user.lastLogin = new Date().toISOString();
+        this.saveUsers(users);
+
         // Remove password from user object
         const { password: _, ...userWithoutPassword } = user;
 
@@ -97,27 +158,16 @@ class AuthService {
         this.setAuthData(userWithoutPassword, token);
 
         return { user: userWithoutPassword, token };
-
-        // API version would be:
-        // return fetch('/api/auth/login', {
-        //     method: 'POST',
-        //     headers: { 'Content-Type': 'application/json' },
-        //     body: JSON.stringify({ email, password })
-        // }).then(res => res.json())
     }
 
     /**
      * Logout user
      */
     logout() {
+        if (!isBrowser) return;
+
         localStorage.removeItem(this.storageKey);
         localStorage.removeItem(this.tokenKey);
-
-        // API version would be:
-        // return fetch('/api/auth/logout', {
-        //     method: 'POST',
-        //     headers: { 'Authorization': `Bearer ${this.getToken()}` }
-        // })
     }
 
     /**
@@ -125,6 +175,8 @@ class AuthService {
      * @returns {Object|null} User object or null
      */
     getCurrentUser() {
+        if (!isBrowser) return null;
+
         const userStr = localStorage.getItem(this.storageKey);
         if (!userStr) return null;
 
@@ -148,6 +200,8 @@ class AuthService {
      * @returns {string|null}
      */
     getToken() {
+        if (!isBrowser) return null;
+
         return localStorage.getItem(this.tokenKey);
     }
 
@@ -164,30 +218,64 @@ class AuthService {
             throw new Error('User not authenticated');
         }
 
-        const updatedUser = { ...currentUser, ...updates };
+        // Get all users and update the current user
+        const users = this.getStoredUsers();
+        const userIndex = users.findIndex(u => u.id === currentUser.id);
+
+        if (userIndex === -1) {
+            throw new Error('User not found');
+        }
+
+        // Update user data (merge updates)
+        const updatedUserData = {
+            ...users[userIndex],
+            ...updates,
+            // Preserve certain fields
+            id: currentUser.id,
+            email: currentUser.email,
+            createdAt: currentUser.createdAt,
+        };
+
+        users[userIndex] = updatedUserData;
+        this.saveUsers(users);
+
+        // Remove password from response
+        const { password: _, ...updatedUser } = updatedUserData;
+
+        // Update stored auth data
         this.setAuthData(updatedUser, this.getToken());
 
         return updatedUser;
+    }
 
-        // API version would be:
-        // return fetch('/api/user/profile', {
-        //     method: 'PUT',
-        //     headers: {
-        //         'Content-Type': 'application/json',
-        //         'Authorization': `Bearer ${this.getToken()}`
-        //     },
-        //     body: JSON.stringify(updates)
-        // }).then(res => res.json())
+    /**
+     * Get user by email (for testing/admin purposes)
+     * @param {string} email 
+     * @returns {Object|null}
+     */
+    getUserByEmail(email) {
+        const users = this.getStoredUsers();
+        const user = users.find(u => u.email === email);
+        if (!user) return null;
+
+        const { password: _, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+    }
+
+    /**
+     * Reset users to initial dummy data (for testing)
+     */
+    resetToInitialData() {
+        if (!isBrowser) return;
+
+        localStorage.setItem(this.usersKey, JSON.stringify(initialUsers));
     }
 
     // Helper methods
 
-    getStoredUsers() {
-        const usersStr = localStorage.getItem('users');
-        return usersStr ? JSON.parse(usersStr) : [];
-    }
-
     setAuthData(user, token) {
+        if (!isBrowser) return;
+
         localStorage.setItem(this.storageKey, JSON.stringify(user));
         localStorage.setItem(this.tokenKey, token);
     }
